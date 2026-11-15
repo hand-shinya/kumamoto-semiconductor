@@ -70,13 +70,13 @@ svg text.tm:not([fill]){fill:var(--muted)}
 #vstart .play{background:#1f5fbf;color:#fff}#vstart .silent{background:#fff;color:#1f5fbf}
 #vstart small{display:block;color:#555;font-size:15px;margin-top:8px}
 #vbar{position:fixed;right:14px;top:10px;z-index:40;display:none;align-items:center;gap:10px;background:rgba(40,40,38,.85);color:#fff;border-radius:999px;padding:6px 14px;font-size:15px}
-#vbar.on{display:flex}#vbar button{font:inherit;font-size:16px;background:none;border:1px solid rgba(255,255,255,.5);color:#fff;border-radius:999px;padding:4px 12px;cursor:pointer}
+#vbar.on{display:flex}#vbar{transition:opacity .4s}#vbar.idle{opacity:0;pointer-events:none}#vbar button{font:inherit;font-size:16px;background:none;border:1px solid rgba(255,255,255,.5);color:#fff;border-radius:999px;padding:4px 12px;cursor:pointer}
 #vbar .t{min-width:72px;text-align:center;font-variant-numeric:tabular-nums}
 </style>
 </head>
 <body>
-<div id="vstart" role="dialog" aria-label="再生の方法"><div class="box"><h2>熊本と半導体</h2>音声の説明に合わせて、画面が自動で進みます（約19分）。<br><button class="play" id="vplay">▶ 音声つきで再生する</button><button class="silent" id="vsilent">音声なしで見る</button><small>再生中: スペース＝一時停止・再開、→／←＝次・前の画面（その画面の説明から）、M＝音声を止めて手で進める</small></div></div>
-<div id="vbar"><button id="vpp">一時停止</button><span class="t" id="vt"></span><button id="vprev">◀ 前</button><button id="vnext">次 ▶</button><button id="voff">音声を止める</button></div>
+<div id="vstart" role="dialog" aria-label="再生の方法"><div class="box"><h2>熊本と半導体</h2>音声の説明に合わせて、画面が自動で進みます（約19分）。<br><button class="play" id="vplay">▶ 音声つきで再生する</button><button class="silent" id="vsilent">音声なしで見る</button><small>再生中は、右上の帯のボタンで「一時停止」「前」「次」「声を止める」ができます（帯は少しすると消え、マウスを動かすか画面に触れると出ます）。キーでは、スペース＝一時停止・再開、→／←＝次・前の画面、M＝声を止める。声を止めた後と「音声なしで見る」では、→／← か、画面のクリック・タップで進みます（左の端は前へ）。</small></div></div>
+<div id="vbar"><button id="vpp">一時停止</button><span class="t" id="vt"></span><button id="vprev">◀ 前</button><button id="vnext">次 ▶</button><button id="voff">声を止める</button></div>
 <audio id="vaud" preload="auto"></audio>
 <div id="stage"></div>
 <div id="tip"></div>
@@ -503,13 +503,18 @@ VA.addEventListener('ended',()=>{if(!vOn)return;if(cur<all.length-1){vT=setTimeo
 function vToggle(){if(!vOn)return;if(VA.paused){clearTimeout(vT);if(VA.ended){if(cur<all.length-1)show(cur+1);else{VA.currentTime=0;VA.play();vPaused=false}}else{VA.play();vPaused=false}}else{VA.pause();clearTimeout(vT);vPaused=true}vLabel()}
 function vStop(){vOn=false;clearTimeout(vT);VA.pause();VB.classList.remove('on')}
 const _show=show;show=function(n){_show(n);if(vOn)vPlay()};
-document.getElementById('vplay').onclick=e=>{e.stopPropagation();VS.remove();vOn=true;VB.classList.add('on');vPlay()};
+document.getElementById('vplay').onclick=e=>{e.stopPropagation();VS.remove();vOn=true;VB.classList.add('on');vWake();vPlay()};
 document.getElementById('vsilent').onclick=e=>{e.stopPropagation();VS.remove()};
 document.getElementById('vpp').onclick=e=>{e.stopPropagation();vToggle()};
 document.getElementById('vprev').onclick=e=>{e.stopPropagation();show(cur-1)};
 document.getElementById('vnext').onclick=e=>{e.stopPropagation();show(cur+1)};
 document.getElementById('voff').onclick=e=>{e.stopPropagation();vStop()};
 VB.addEventListener('click',e=>e.stopPropagation());VS.addEventListener('click',e=>e.stopPropagation());
+let vIdleT=null,vTouchIdle=false;
+function vWake(){VB.classList.remove('idle');clearTimeout(vIdleT);vIdleT=setTimeout(()=>{if(vOn)VB.classList.add('idle')},3000)}
+['mousemove','keydown'].forEach(ev=>addEventListener(ev,()=>{if(vOn)vWake()},true));
+addEventListener('pointerdown',e=>{vTouchIdle=vOn&&e.pointerType!=='mouse'&&VB.classList.contains('idle');if(vOn)vWake()},true);
+addEventListener('click',e=>{if(vTouchIdle){vTouchIdle=false;e.stopImmediatePropagation();e.preventDefault()}},true);
 addEventListener('keydown',e=>{if(document.getElementById('vstart')){e.stopImmediatePropagation();return}
   if(!vOn)return;
   if(e.key===' '){e.preventDefault();e.stopImmediatePropagation();vToggle()}
