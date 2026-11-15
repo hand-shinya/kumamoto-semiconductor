@@ -1,0 +1,520 @@
+<!doctype html>
+<html lang="ja" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>熊本と半導体</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#e9e8e4; --surface:#fcfcfb; --ink:#0b0b0b; --ink2:#45443f; --muted:#6f6e69;
+  --grid:#e4e3df; --base:#bdbcb7;
+  --jp:#2a78d6; --jp-soft:#cfe0f6; --other:#b4b3ae; --other2:#d6d5d0;
+  --warn:#c0392b; --fc:#1a9a6c; --fc-soft:#cdeee0; --kr:#d9662f; --kr-soft:#fadccd; --us:#c98500;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0f0f0e; --surface:#1a1a19; --ink:#f0efec; --ink2:#cfcec4; --muted:#a3a29b;
+    --grid:#2c2c2a; --base:#55554f; --jp:#3987e5; --jp-soft:#23395a; --other:#6d6c67; --other2:#3d3d3a;
+    --warn:#e66767; --fc:#22b07f; --fc-soft:#173d30; --kr:#e07040; --kr-soft:#4a2a1c; --us:#c98500;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0f0f0e; --surface:#1a1a19; --ink:#f0efec; --ink2:#cfcec4; --muted:#a3a29b;
+  --grid:#2c2c2a; --base:#55554f; --jp:#3987e5; --jp-soft:#23395a; --other:#6d6c67; --other2:#3d3d3a;
+  --warn:#e66767; --fc:#22b07f; --fc-soft:#173d30; --kr:#e07040; --kr-soft:#4a2a1c; --us:#c98500;
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;background:var(--bg);color:var(--ink);
+  font-family:"Noto Sans JP","Noto Sans CJK JP","Meiryo","メイリオ","Yu Gothic UI","Hiragino Sans","Segoe UI",sans-serif}
+#stage{position:fixed;inset:0;display:flex;align-items:center;justify-content:center}
+.slide{width:1280px;height:720px;background:var(--surface);position:absolute;
+  padding:36px 56px 24px;display:none;flex-direction:column;transform-origin:center center}
+.slide.on{display:flex}
+.no{font-size:15px;color:var(--ink2);letter-spacing:.06em}
+h1{font-size:33px;margin:6px 0 4px;font-weight:700;line-height:1.3}
+.lead{font-size:20px;color:var(--ink2);margin:0 0 8px;line-height:1.5}
+.fig{flex:1;min-height:0;position:relative}
+.fig svg{width:100%;height:100%;display:block;overflow:visible}
+.msg{font-size:21px;line-height:1.5;border-left:6px solid var(--ink2);padding:5px 0 5px 16px;margin-top:8px}
+.src{font-size:15px;color:var(--ink2);margin-top:6px;line-height:1.45}
+h1,.lead,.msg,.src,.q,.def,.ans{word-break:auto-phrase;line-break:strict}
+svg text:not([fill]){fill:var(--ink)}
+svg text{font-family:inherit}
+svg text.t2:not([fill]),svg tspan.t2:not([fill]){fill:var(--ink2)}
+svg text.tm:not([fill]){fill:var(--muted)}
+.cover{justify-content:center}
+.cover h1{font-size:52px}
+#nav{position:fixed;bottom:10px;right:14px;font-size:15px;color:var(--muted);transition:opacity .6s}
+.textpage .body{flex:1;display:flex;flex-direction:column;justify-content:center;gap:16px}
+.textpage .q{font-size:29px;line-height:1.4;padding-left:22px;border-left:8px solid var(--ink2)}
+.textpage .q small{display:block;font-size:19px;color:var(--ink2)}
+.textpage .def{font-size:18px;line-height:1.6;color:var(--ink);background:var(--grid);border-radius:8px;padding:10px 16px}
+.ans{display:grid;grid-template-columns:300px 1fr;gap:9px 22px;font-size:18px;line-height:1.5}
+.ans .k{font-weight:700}
+#notes{position:fixed;left:0;right:0;bottom:0;height:34vh;overflow:auto;background:#1b1b1a;color:#f0efec;
+  font-size:18px;line-height:1.7;padding:14px 22px;display:none;z-index:8;white-space:pre-wrap}
+#notes.on{display:block}
+@media print{@page{size:1280px 720px;margin:0} html,body{background:#fff}
+  #stage{position:static;display:block} .slide{display:flex!important;position:relative;transform:none!important;page-break-after:always}
+  #nav,#notes,#tip{display:none!important}}
+#tip{position:fixed;pointer-events:none;background:var(--ink);color:var(--surface);font-size:15px;
+  padding:6px 9px;border-radius:6px;display:none;z-index:9;white-space:nowrap}
+
+#vstart{position:fixed;inset:0;z-index:50;display:flex;align-items:center;justify-content:center;background:rgba(30,30,28,.55)}
+#vstart .box{background:#fafaf7;color:#1e1e1c;border-radius:14px;padding:34px 40px;max-width:580px;width:calc(100% - 32px);text-align:center;font-size:18px;line-height:1.7;box-shadow:0 10px 40px rgba(0,0,0,.25)}
+#vstart h2{margin:0 0 6px;font-size:24px}
+#vstart button{font:inherit;font-size:20px;font-weight:700;margin:14px 6px 4px;padding:12px 26px;border-radius:10px;border:2px solid #1f5fbf;cursor:pointer}
+#vstart .play{background:#1f5fbf;color:#fff}#vstart .silent{background:#fff;color:#1f5fbf}
+#vstart small{display:block;color:#555;font-size:15px;margin-top:8px}
+#vbar{position:fixed;right:14px;top:10px;z-index:40;display:none;align-items:center;gap:10px;background:rgba(40,40,38,.85);color:#fff;border-radius:999px;padding:6px 14px;font-size:15px}
+#vbar.on{display:flex}#vbar button{font:inherit;font-size:16px;background:none;border:1px solid rgba(255,255,255,.5);color:#fff;border-radius:999px;padding:4px 12px;cursor:pointer}
+#vbar .t{min-width:72px;text-align:center;font-variant-numeric:tabular-nums}
+</style>
+</head>
+<body>
+<div id="vstart" role="dialog" aria-label="再生の方法"><div class="box"><h2>熊本と半導体</h2>音声の説明に合わせて、画面が自動で進みます（約19分）。<br><button class="play" id="vplay">▶ 音声つきで再生する</button><button class="silent" id="vsilent">音声なしで見る</button><small>再生中: スペース＝一時停止・再開、→／←＝次・前の画面（その画面の説明から）、M＝音声を止めて手で進める</small></div></div>
+<div id="vbar"><button id="vpp">一時停止</button><span class="t" id="vt"></span><button id="vprev">◀ 前</button><button id="vnext">次 ▶</button><button id="voff">音声を止める</button></div>
+<audio id="vaud" preload="auto"></audio>
+<div id="stage"></div>
+<div id="tip"></div>
+<div id="notes"></div>
+<div id="nav">→ / ← で移動　N 話者メモ　F 全画面　<span id="pg"></span></div>
+<script>
+// ===== 数字（出典は各画面の下に記載）=====
+// 色の意味: 青＝日本・熊本（日本の値、熊本に工場がある種類）。それ以外の意味には青を使わない。
+const NS="http://www.w3.org/2000/svg";
+const tip=document.getElementById('tip');
+function el(tag,attrs,parent,text){const e=document.createElementNS(NS,tag);for(const k in attrs){const v=attrs[k];if(v===null||v===undefined||v==='')continue;e.setAttribute(k,v)}if(text!=null)e.textContent=text;if(parent)parent.appendChild(e);return e}
+function hov(e,s){if(!e)return;e.style.cursor='default';e.addEventListener('mousemove',ev=>{tip.style.display='block';tip.textContent=s;tip.style.left=(ev.clientX+14)+'px';tip.style.top=(ev.clientY+12)+'px'});e.addEventListener('mouseleave',()=>tip.style.display='none')}
+function svgIn(fig,w,h){return el('svg',{viewBox:`0 0 ${w} ${h}`,preserveAspectRatio:'xMidYMid meet'},fig)}
+function rbar(g,x,y,w,h,fill,r=4){ // 端だけ丸い横棒
+  if(w<=0)return; const rr=Math.min(r,w/2,h/2);
+  return el('path',{d:`M${x},${y}h${w-rr}a${rr},${rr} 0 0 1 ${rr},${rr}v${h-2*rr}a${rr},${rr} 0 0 1 -${rr},${rr}h-${w-rr}z`,fill},g)}
+
+const slides=[];
+function slide(no,title,lead,draw,msg,src,cls){slides.push({no,title,lead,draw,msg,src,cls})}
+
+// --- 表紙
+slide('','熊本と半導体<br>― 世界の中の、どこにいるのか','今日の三つの問いに、図で答える',null,
+ '台湾の TSMC の工場が熊本にできて、日本の立ち位置、熊本の経済、外からの見られ方は、どう変わったのか。','CENTRIC 勉強会　データの時点: 2026年11月13日までに公表された資料（各画面の下に出典）','cover');
+
+// --- 問い
+slide('今日の問い','今日の三つの問い','受講者の方からいただいた問い（「工場ができて動いているのに、熊本の経済は変わったのか」から）',fig=>{
+  fig.parentNode.classList.add('textpage'); fig.className='body';
+  fig.innerHTML=`<div class="q">輸出・順位・力関係は、何が変わったのか<small>→ 輸出額、日本の割合、最先端の工場を見て答える（世界全体の中の順位は、三つ目の問いの図で見る）</small></div>
+  <div class="q">熊本の経済は、TSMC の工場で変わったのか<small>→ 九州の生産額、熊本の水・土地・働く人、事業者の受け止め、地震を見て答える</small></div>
+  <div class="q">熊本の外・日本の外からは、いま どう見られているのか<small>→ 世界が日本の何に頼っているかと、海外の声を見て答える（日本の国内からの見方は、今日は扱わない）</small></div>
+  <div class="def">TSMC＝台湾の会社。ほかの会社から頼まれて半導体を作る会社として、世界最大（その市場の 72.5%、2026年4〜6月）。この資料では、熊本県菊陽町の工場を「TSMC 熊本第1工場」、建設中の工場を「TSMC 熊本第2工場」と呼ぶ。運営は TSMC の子会社 JASM（ソニー・デンソー・トヨタも出資）。第1工場は2024年12月に量産を始めた。</div>`;
+ },'答える前に、半導体とは何かを見る。そのうえで、三つの問いの順に答える。','出典: 市場の割合＝TrendForce 2026-09-09（受託製造の市場全体の売上に占める割合）　出資＝MONOist 2024-02-27 ほか　量産開始＝熊本県 知事記者会見録 2024-12-27');
+
+// --- 全体像: ノートパソコンの中身
+slide('半導体とは','半導体とは、ノートパソコンのどこにあるのか','半導体＝電気を通したり止めたりできるシリコンで作った、小さな部品（チップ）。基板の上の黒い部品がそれにあたる',fig=>{
+  const s=svgIn(fig,1168,410);
+  el('text',{x:0,y:22,'font-size':18,'font-weight':700,class:'t2'},s,'半導体ではない部品');
+  ['画面（ガラス・液晶）','キーボード','電池','外装・ねじ・配線'].forEach((t,i)=>{const y=40+i*62;
+    el('rect',{x:0,y,width:200,height:48,rx:6,fill:'var(--other2)'},s); el('text',{x:12,y:y+31,'font-size':17},s,t)});
+  el('text',{x:0,y:310,'font-size':16,class:'t2'},s,'※ 部品の構成は機種に');el('text',{x:0,y:332,'font-size':16,class:'t2'},s,'　よって違う。図は例。');
+  const bx=225,by=8,bw=943,bh=392;
+  el('rect',{x:bx,y:by,width:bw,height:bh,rx:12,fill:'var(--grid)',stroke:'var(--base)','stroke-width':2},s);
+  el('text',{x:bx+20,y:by+30,'font-size':19,'font-weight':700},s,'基板（電子回路の板）　― ここに載る黒い部品が「半導体」。働きで7つの種類に分かれる');
+  const C=[['計算','GPU・AI 用など','画像や AI の大量の計算をする','CPU は統計ではマイコンと同じ「制御」に入る'],
+           ['記憶','メモリ','作業中の内容と、保存した内容を覚える','例: 作業中のデータ置き場、SSD の中の部品'],
+           ['制御','マイコン・CPU','機器の中で、決まった仕事を受け持つ','例: パソコンの CPU、キーボードの見張り役'],
+           ['電気の調整','電源IC など','電気の流れや電圧を整える','例: 電池の電気を、部品ごとの電圧に分ける'],
+           ['光','イメージセンサー・LED など','光を電気に、電気を光に変える','例: カメラの目、画面の明かり（LED）'],
+           ['感知','センサー','温度や傾きなど、光以外のものを感じる','例: 本体の熱を測って、ファンを回す仕組み'],
+           ['スイッチ','パワー半導体など','電気を入れたり切ったりする','例: 充電器の中で、電気を細かく入れ切りする']];
+  C.forEach(([n,ab,r,k],i)=>{const col=i%2,row=Math.floor(i/2),x=bx+24+col*462,y=by+48+row*86;
+    el('rect',{x,y:y+6,width:44,height:44,rx:4,fill:'#2b2b2b'},s);
+    [0,1,2].forEach(j=>{el('rect',{x:x-6,y:y+14+j*12,width:6,height:4,fill:'#777'},s);el('rect',{x:x+44,y:y+14+j*12,width:6,height:4,fill:'#777'},s)});
+    const tt=el('text',{x:x+62,y:y+20,'font-size':20,'font-weight':700},s,n);
+    el('tspan',{'font-size':16,'font-weight':400,class:'t2',dx:10},tt,ab);
+    el('text',{x:x+62,y:y+44,'font-size':16},s,r);
+    el('text',{x:x+62,y:y+67,'font-size':16,class:'t2'},s,k)});
+  // 空いた枠に、ことばの説明
+  const x=bx+24+462,y=by+48+3*86;
+  el('text',{x,y:y+20,'font-size':17,'font-weight':700},s,'ことば');
+  el('text',{x,y:y+44,'font-size':16},s,'IC（集積回路）＝多くの部品を1つのチップにまとめたもの');
+  el('text',{x,y:y+67,'font-size':16},s,'マイコン＝機器の中の、小さなコンピューター');
+ },'ひとくちに「半導体」と言っても、計算・記憶・スイッチなど、働きの違う7つの種類がある。',
+ '図は説明のための例（実際の部品の配置ではない）。7つの種類は、世界の半導体の売上統計（WSTS）の7つの分類に、働きの名前を付けたもの。パソコンの CPU は、統計では主に「制御」に入る（WSTS の製品分類表 2018年版）。');
+
+// --- 種類ごとの売上
+slide('半導体とは','半導体の売上は、どの種類に集まっているか','世界の半導体の売上（2025年の実績、約7,960億ドル）を100として、7つの種類に分けた。青＝熊本に工場がある種類',fig=>{
+  const s=svgIn(fig,1168,390);
+  const d=[['計算','GPU・AI 用など','',38,0],['記憶','メモリ','',29,0],['制御','マイコン・CPU','ルネサス',11,1],['電気の調整','電源IC など','',11,0],
+           ['光','イメージセンサー・LED など','ソニー',5,1],['スイッチ','パワー半導体など','三菱電機',4,1],['感知','センサー','',3,0]];
+  const x0=360,sc=11,bh=36,gap=17;
+  d.forEach(([n,e,co,v,k],i)=>{const y=6+i*(bh+gap);
+    el('text',{x:x0-16,y:y+18,'font-size':20,'font-weight':700,'text-anchor':'end'},s,n);
+    el('text',{x:x0-16,y:y+38,'font-size':16,'text-anchor':'end',class:'t2'},s,e);
+    const r=rbar(s,x0,y,v*sc,bh,k?'var(--jp)':'var(--other)'); hov(r,`${n}（${e}）: ${v}%`);
+    el('text',{x:x0+v*sc+12,y:y+26,'font-size':22,'font-weight':700},s,v+'%');
+    if(co)el('text',{x:x0+v*sc+70,y:y+26,'font-size':18,'font-weight':700,fill:'var(--jp)'},s,'熊本: '+co)});
+  el('path',{d:`M${x0+620},${6}h14v${2*(bh+gap)-gap}h-14`,fill:'none',stroke:'var(--ink2)','stroke-width':2},s);
+  el('text',{x:x0+646,y:6+(bh+gap)-4,'font-size':19,'font-weight':700},s,'計算と記憶で');
+  el('text',{x:x0+646,y:6+(bh+gap)+20,'font-size':19,'font-weight':700},s,'約3分の2');
+  el('text',{x:x0+470,y:330,'font-size':16,class:'t2'},s,'TSMC 熊本第1工場は、頼まれて作る工場で、');
+  el('text',{x:x0+470,y:354,'font-size':16,class:'t2'},s,'作る種類は頼んだ会社による');
+ },'売上の約3分の2は、「計算」と「記憶」に集まっている。',
+ '出典: WSTS 日本協議会「2026年春季半導体市場予測」2026-06-02（2025年の実績。四捨五入のため合計は101）　熊本の工場＝EE Times Japan 2026-08-24 更新（ルネサス・三菱電機）、熊本日日新聞 2026-07-31（ソニーの熊本テクノロジーセンターの画像センサー）');
+
+// --- 伸び
+slide('半導体とは','AI の時代に、大きく伸びている種類','2024年 → 2025年の売上の伸び（%、実績）。記憶だけは、2026年の予測も破線で添えた。青＝熊本に工場がある種類',fig=>{
+  const s=svgIn(fig,1168,390);
+  // [名前, 伸び, 熊本, 2024年の売上(億ドル), 2025年]
+  const d=[['記憶（メモリ）',39.0,0,'1,655','2,300'],['計算（GPU・AI 用など）',38.8,0,'2,158','2,995'],['感知（センサー）',10.4,0,'189','209'],['電気の調整（電源IC など）',8.7,0,'796','865'],
+           ['制御（マイコン・CPU）',7.9,1,'786','849'],['光（イメージセンサー・LED など）',4.7,1,'411','430'],['スイッチ（パワー半導体など）',-1.0,1,'310','307']];
+  const x0=380,sc=14,bh=32,gap=12,fx=30; // fx＝記憶の行の下に、予測の棒を置く分
+  const Y=i=>i*(bh+gap)+(i>0?fx:0);
+  el('line',{x1:x0,x2:x0,y1:0,y2:Y(d.length-1)+bh+8,stroke:'var(--base)','stroke-width':1.5},s);
+  d.forEach(([n,v,jp,a,b],i)=>{const y=Y(i);
+    el('text',{x:x0-24,y:y+15,'font-size':18,'font-weight':700,'text-anchor':'end'},s,n);
+    el('text',{x:x0-24,y:y+35,'font-size':16,'text-anchor':'end',class:'t2'},s,`${a} → ${b}億ドル（2025年）`);
+    let r; if(v>=0){r=rbar(s,x0,y,v*sc,bh,jp?'var(--jp)':'var(--other)')} else {r=el('rect',{x:x0+v*sc,y,width:-v*sc,height:bh,fill:'var(--jp)'},s)}
+    hov(r,`${n}: ${v>0?'+':''}${v}%（${a} → ${b}億ドル）`);
+    el('text',{x:v>=0?x0+v*sc+10:x0+10,y:y+bh*0.7,'font-size':20,'font-weight':700},s,`${v>0?'+':v<0?'−':''}${Math.abs(v).toFixed(1)}%`)});
+  // 記憶の 2026年の予測（記憶の棒のすぐ下。長さは途中を省いた）
+  const yf=bh+4,hf=24,wf=760;
+  const fr=el('rect',{x:x0,y:yf,width:wf,height:hf,rx:3,fill:'none',stroke:'var(--ink2)','stroke-width':2,'stroke-dasharray':'7 5'},s); hov(fr,'記憶 2026年の予測: +249.5%（2,300 → 8,039億ドル）');
+  el('text',{x:x0+12,y:yf+18,'font-size':16,class:'t2'},s,'2026年の予測　約3.5倍（+249.5%）。棒の途中を省いた');
+  el('path',{d:`M${x0+640},${yf-3} l8,${hf+6} M${x0+652},${yf-3} l8,${hf+6}`,stroke:'var(--ink2)','stroke-width':2,fill:'none'},s);
+  el('text',{x:0,y:378,'font-size':17},s,'WSTS は、AI 向けのデータセンターへの投資が、記憶と計算の伸びを支えたとしている。');
+ },'大きく伸びたのは「記憶」と「計算」（+4割近く）で、記憶は2026年に約3.5倍になる予測である。熊本で作る3つの種類（青）は、伸びが1割未満か、少し減った。',
+ '出典: WSTS 日本協議会「2026年春季半導体市場予測」2026-06-02（2025年の実績と2026年の予測。AI の記述は同じ発表の本文「AI 利用拡大に伴うデータセンター投資の恩恵を受けやすいメモリーやロジック」。ロジック＝この資料の「計算」にあたる区分）');
+
+// --- 輸出（一つ目の問い）
+slide('一つ目の問い ― 時代の中の日本','半導体の中心である IC の輸出額は、5年で、円で数えて1.7倍になった','IC＝半導体の中心の種類（売上の約9割）。財務省の貿易統計で見た輸出額（円）。薄い青＝2020年、濃い青＝2025年',fig=>{
+  const s=svgIn(fig,1168,400);
+  const G=[['日本全体の IC','（集積回路）',2.91,4.87,'1.7倍',''],['九州・山口・沖縄の IC','（税関の区分）',0.79,1.80,'2.3倍','全国の IC の輸出の 約27% → 約37%'],['〔参考〕半導体などを作る機械','（製品ではなく機械。日本全体）',2.52,4.55,'1.8倍','']];
+  const x0=300,sc=115,bh=28;
+  G.forEach(([n,n2,a,b,m,note],i)=>{const y=6+i*104;
+    el('text',{x:x0-18,y:y+24,'font-size':20,'font-weight':700,'text-anchor':'end'},s,n);
+    el('text',{x:x0-18,y:y+48,'font-size':16,'text-anchor':'end',class:'t2'},s,n2);
+    const r1=rbar(s,x0,y,a*sc,bh,'var(--jp-soft)'); hov(r1,`${n} 2020年: ${a.toFixed(2)}兆円`);
+    const r2=rbar(s,x0,y+bh+4,b*sc,bh,'var(--jp)'); hov(r2,`${n} 2025年: ${b.toFixed(2)}兆円`);
+    el('text',{x:x0+a*sc+10,y:y+21,'font-size':18},s,`${a.toFixed(2)}兆円（2020年）`);
+    el('text',{x:x0+b*sc+10,y:y+bh+25,'font-size':19,'font-weight':700},s,`${b.toFixed(2)}兆円（2025年）`);
+    el('text',{x:1168,y:y+bh+25,'font-size':24,'font-weight':700,'text-anchor':'end'},s,m);
+    if(note)el('text',{x:x0,y:y+bh*2+26,'font-size':16,class:'t2'},s,note)});
+  el('line',{x1:0,x2:1168,y1:204,y2:204,stroke:'var(--base)','stroke-width':1.5,'stroke-dasharray':'6 5'},s);
+  el('rect',{x:0,y:286,width:1168,height:112,rx:8,fill:'var(--grid)'},s);
+  ['・IC（集積回路）は、世界の売上統計では7つの種類のうち計算・記憶・制御・電気の調整の4つで、2025年の売上の約9割（88%）。','・円で数えた額で、円安の分を含む。日本全体の IC の個数は 731億個 → 745億個で、ほぼ同じだった。',
+   '・税関の統計は、手続きをした場所で数える。九州の分は、ほぼすべてが福岡県の税関で手続きされ、熊本県の値はほぼゼロ。',
+   '　そのため、熊本の工場の分だけを取り出すことはできない。機械には、液晶などを作る機械も含む。'].forEach((t,j)=>el('text',{x:14,y:310+j*25,'font-size':16},s,t));
+ },'半導体の中心である IC の輸出額は、日本全体で5年で1.7倍、九州・山口・沖縄は2.3倍になり、2025年は1988年以降で最も多い。ただし円安の分を含み、個数はほぼ同じである。作る機械の輸出も1.8倍になった。',
+ '出典: 財務省「貿易統計」輸出入額の推移（主要商品別、確定値）・令和7年分（確定）2026-11-12　九州＝門司税関「九州経済圏の貿易（確々報値）」令和2年分・令和7年分（令和2年分は Internet Archive の保存版）　IC＝HS 8542、機械＝「半導体等製造装置」（HS 8486）　約9割＝WSTS 2026年春季予測の2025年の実績から計算（4つの種類の合計 7,010億ドル ÷ 全体 7,956億ドル＝88%。種類ごとの割合を四捨五入して足すと89%）　1988年以降で最多＝同じ財務省の表の1988〜2025年の値を比べた');
+
+// --- 政府の対策（割合）
+slide('一つ目の問い ― 時代の中の日本','日本にある工場は増えるが、日本の割合は約17%から15%へ','「日本の割合」には2つの数え方がある。国の対策が増やそうとしているのは、日本にある工場（外国の会社の工場も入る）',fig=>{
+  const s=svgIn(fig,1168,400);
+  // 左: 2つの数え方（同じ色。注目する方を太い枠に）
+  el('rect',{x:0,y:4,width:450,height:118,rx:10,fill:'none',stroke:'var(--ink2)','stroke-width':1.5},s);
+  el('text',{x:18,y:34,'font-size':19,'font-weight':700},s,'日本の会社が売った額（世界の中の割合）');
+  el('text',{x:18,y:82,'font-size':40,'font-weight':700,fill:'var(--ink2)'},s,'約50%');
+  el('text',{x:18,y:108,'font-size':16,class:'t2'},s,'1980年代の最盛期');
+  el('text',{x:232,y:82,'font-size':40,'font-weight':700,fill:'var(--ink2)'},s,'7%');
+  el('text',{x:232,y:108,'font-size':16,class:'t2'},s,'2025年（別の報告の値）');
+  el('rect',{x:0,y:140,width:450,height:118,rx:10,fill:'none',stroke:'var(--ink)','stroke-width':3.5},s);
+  el('text',{x:18,y:170,'font-size':19,'font-weight':700},s,'日本にある工場で作れる量（世界の中の割合）');
+  el('text',{x:18,y:218,'font-size':40,'font-weight':700,fill:'var(--jp)'},s,'約17%');
+  el('text',{x:18,y:244,'font-size':16,class:'t2'},s,'2022年（TSMC 熊本第1工場が動く前）');
+  el('text',{x:0,y:286,'font-size':16,class:'t2'},s,'数える相手も単位も違うので、2つの大小は比べない。');
+  el('path',{d:'M456,199 H520',stroke:'var(--ink2)','stroke-width':3,fill:'none'},s);
+  el('path',{d:'M518,190 L534,199 L518,208 Z',fill:'var(--ink2)'},s);
+  // 右: 次の10年の伸び
+  const x0=560; el('text',{x:x0,y:22,'font-size':19,'font-weight':700},s,'この量は、次の10年でどう変わるか（2022→2032年）');
+  el('text',{x:x0,y:46,'font-size':16,class:'t2'},s,'シリコンウエハー（円盤）の枚数で数えた、工場の能力の伸び');
+  const D=[['日本にある工場',86,1],['世界全体の工場',108,0]];
+  const sc=3.0,bh=44,bx=x0+150;
+  D.forEach(([t,v,k],i)=>{const y=60+i*58;
+    el('text',{x:x0,y:y+29,'font-size':18,'font-weight':700,fill:k?'var(--jp)':null},s,t);
+    const r=rbar(s,bx,y,v*sc,bh,k?'var(--jp)':'var(--other)'); hov(r,`${t}: +${v}%`);
+    el('text',{x:bx+v*sc+10,y:y+31,'font-size':24,'font-weight':700},s,'+'+v+'%')});
+  el('rect',{x:x0,y:184,width:608,height:96,rx:10,fill:'var(--jp-soft)'},s);
+  el('text',{x:x0+20,y:212,'font-size':18,'font-weight':700},s,'日本にある工場の、世界の中の割合');
+  el('text',{x:x0+20,y:262,'font-size':40,'font-weight':700,fill:'var(--jp)'},s,'約17% → 15%');
+  el('text',{x:x0+330,y:256,'font-size':17,class:'t2'},s,'2022年 → 2032年（予測）');
+  el('text',{x:x0,y:304,'font-size':16,class:'t2'},s,'予測は2024年時点のもので、発表済みの工場の計画を含む。');
+  // 2つの「15%」を取り違えないための注
+  el('rect',{x:0,y:322,width:1168,height:76,rx:8,fill:'none',stroke:'var(--warn)','stroke-width':2},s);
+  el('text',{x:16,y:352,'font-size':18,'font-weight':700,fill:'var(--warn)'},s,'注意');
+  el('text',{x:70,y:352,'font-size':18},s,'「4つの役目」ごとに国の割合を見た図にも、日本の 15% が出る。それは2024年の工場の能力を別の報告で数えた値で、');
+  el('text',{x:70,y:380,'font-size':18},s,'この2032年の予測とは別のもの。2つの 15% は比べない。');
+ },'日本にある工場の能力は、10年で約1.9倍になる見込み（会社の計画を含む予測）。世界は約2.1倍に増えるので、日本の割合は約17%から15%へ少し下がる。',
+ '出典: 約50%＝SIA/BCG 2024年5月 本文 p.30　7%＝SIA「2026 State of the U.S. Semiconductor Industry」2026年7月 p.7（本社の所在地で数えた売上）　約17%・伸び・割合＝SIA/BCG 2024年5月 Exhibit 7・8（SEMI のデータ、300mm 換算の枚数）');
+
+// --- 最先端の工場
+slide('一つ目の問い ― 時代の中の日本','日本にまだ無い、最先端の半導体の工場','最先端＝回路の細かさの世代が「10nm」より細かい、計算・制御用の半導体。その工場が世界のどこにあるか',fig=>{
+  const s=svgIn(fig,1168,400);
+  const REG=[['日本','var(--jp)',0,5],['台湾','#8c8b86',69,47],['韓国','#c9c8c2',31,9],['米国','var(--us)',0,28],['欧州','#4f4e4a',0,6],['中国・その他','var(--surface)',0,5]];
+  function donut(cx,cy,yi,label,sub,dash){let a=-Math.PI/2;const R=88,r=52;
+    REG.forEach(([n,c,...v])=>{const val=v[yi];if(!val)return;const b=a+val/100*2*Math.PI;const L=(b-a)>Math.PI?1:0;
+      const isr=n==='中国・その他';const p=el('path',{d:`M${cx+R*Math.cos(a)},${cy+R*Math.sin(a)}A${R},${R} 0 ${L} 1 ${cx+R*Math.cos(b)},${cy+R*Math.sin(b)}L${cx+r*Math.cos(b)},${cy+r*Math.sin(b)}A${r},${r} 0 ${L} 0 ${cx+r*Math.cos(a)},${cy+r*Math.sin(a)}Z`,fill:c,stroke:isr?'var(--ink2)':'var(--surface)','stroke-width':isr?1.5:2},s);
+      hov(p,`${label} ${n}: ${val}%`);
+      {const m=(a+b)/2,ca=Math.cos(m),rr=val>=9?70:R+(dash?18:12);el('text',{x:cx+rr*ca,y:cy+rr*Math.sin(m)+6,'font-size':16,'font-weight':700,'text-anchor':val>=9?'middle':(ca>0.15?'start':(ca<-0.15?'end':'middle')),fill:val>=9?(n==='台湾'?'#ffffff':'#0b0b0b'):(n==='日本'?'var(--jp)':'#0b0b0b')},s,val+'%')}
+      a=b});
+    if(dash)el('circle',{cx,cy,r:R+6,fill:'none',stroke:'var(--ink2)','stroke-width':1.5,'stroke-dasharray':'5 4'},s);
+    el('text',{x:cx,y:cy+(sub?-2:7),'font-size':21,'font-weight':700,'text-anchor':'middle'},s,label);
+    if(sub)el('text',{x:cx,y:cy+20,'font-size':16,'font-weight':700,'text-anchor':'middle'},s,sub)}
+  donut(150,112,0,'2022年','',false); donut(470,112,1,'2032年','予測',true);
+  el('text',{x:150,y:228,'font-size':16,'text-anchor':'middle',class:'t2'},s,'実績');
+  el('text',{x:470,y:228,'font-size':16,'text-anchor':'middle',class:'t2'},s,'2024年時点の予測');
+  // 表（2つの円を同じ区分けで）
+  el('text',{x:0,y:398,'font-size':16,class:'t2'},s,'nm の数字は世代の呼び名で、実際の線の幅とは一致しないとされる。');
+  const tx=40,ty=252; el('text',{x:tx+250,y:ty,'font-size':16,'font-weight':700,'text-anchor':'end'},s,'2022年'); el('text',{x:tx+420,y:ty,'font-size':16,'font-weight':700,'text-anchor':'end'},s,'2032年（予測）');
+  REG.forEach(([n,c,a,b],i)=>{const y=ty+22+i*20,jp=n==='日本';
+    el('rect',{x:tx,y:y-13,width:14,height:14,rx:2,fill:c,stroke:n==='中国・その他'?'var(--ink2)':null,'stroke-width':n==='中国・その他'?1.2:null},s);
+    el('text',{x:tx+22,y,'font-size':16,'font-weight':jp?700:400,fill:jp?'var(--jp)':null},s,n);
+    el('text',{x:tx+250,y,'font-size':16,'text-anchor':'end','font-weight':jp?700:400,fill:jp?'var(--jp)':null},s,a+'%');
+    el('text',{x:tx+420,y,'font-size':16,'text-anchor':'end','font-weight':jp?700:400,fill:jp?'var(--jp)':null},s,b+'%')});
+  // 右: 年表
+  const x0=730; el('line',{x1:x0,x2:x0,y1:20,y2:300,stroke:'var(--base)','stroke-width':2},s);
+  [['2024年12月','TSMC 熊本第1工場 量産開始','最先端ではない（22nm・28nm が中心）',0],
+   ['2025年4月','北海道 ラピダス 2nm の試作開始','ラピダス＝国が支援する日本の会社',0],
+   ['2027年度後半','北海道 ラピダス 2nm 量産（計画）','2026年10月の時点では、量産の前の段階',1],
+   ['2028年末まで','TSMC 熊本第2工場 3nm 量産（計画）','当初の 6nm・12nm から 3nm に計画を変更',1]].forEach(([y,t,n,k],i)=>{
+    const yy=32+i*80; el('circle',{cx:x0,cy:yy,r:8,fill:k?'var(--surface)':'var(--other)',stroke:k?'var(--jp)':'var(--other)','stroke-width':3},s);
+    el('text',{x:x0+20,y:yy-2,'font-size':17,'font-weight':700},s,y); el('text',{x:x0+20,y:yy+22,'font-size':17,fill:k?'var(--jp)':null,'font-weight':k?700:400},s,t);
+    el('text',{x:x0+20,y:yy+45,'font-size':16,class:'t2'},s,n)});
+  el('circle',{cx:x0,cy:346,r:7,fill:'var(--other)'},s); el('text',{x:x0+18,y:352,'font-size':16,class:'t2'},s,'灰色の点＝すでに起きたこと');
+  el('circle',{cx:x0,cy:376,r:7,fill:'var(--surface)',stroke:'var(--jp)','stroke-width':3},s); el('text',{x:x0+18,y:382,'font-size':16,class:'t2'},s,'青い輪＝日本にある最先端の工場の量産（計画）');
+ },'2022年、日本に最先端の半導体の工場は無かった。2026年10月の時点でも量産している工場は無く、ラピダスは量産の前の段階、TSMC 熊本第2工場は計画である。',
+ '出典: 円と表＝SIA/BCG「Emerging Resilience in the Semiconductor Supply Chain」2024年5月 Exhibit 6（図の値。本文は欧州と日本を合わせて「約12%」。国別の割合は、これが公表されている最新の値）　第1工場の量産開始＝熊本県 知事記者会見録 2024-12-27　計画＝経済産業省の認定計画（2026-10-16）を伝える EE Times Japan 2026-10-19　ラピダス＝ニュースイッチ 2025-07-22、EE Times Japan 2026-10-20');
+
+// --- 九州のこれまで
+slide('二つ目の問い ― 熊本の中では（まず九州全体）','九州の IC の生産額は、2013年に2000年の半分以下、2024年に2000年の94%','九州7県で作られた IC の生産額（経済産業省の生産の統計。輸出の統計とは IC の区切りが少し違う）',fig=>{
+  const s=svgIn(fig,1168,400);
+  const R={x0:60,y0:330,sc:0.015,w:150,dx:230};
+  const V=[['2000年',13924,'過去最高',''],['2013年',6037,'2000年の 43%','全国の 28%'],['2023年',11534,'2000年の 83%','全国の 55%'],['2024年',13126,'2000年の 94%',''],['2025年',11746,'','']];
+  V.forEach(([y,v,n,n2],i)=>{
+    const x=R.x0+i*R.dx,h=v*R.sc,last=i===4;
+    const r=el('path',{d:`M${x},${R.y0}v-${h-4}a4,4 0 0 1 4,-4h${R.w-8}a4,4 0 0 1 4,4v${h-4}z`,fill:last?'var(--other2)':'var(--other)',stroke:last?'var(--ink2)':null,'stroke-width':last?2:null,'stroke-dasharray':last?'6 4':null},s); hov(r,`九州 ${y}: ${v.toLocaleString()}億円`);
+    el('text',{x:x+R.w/2,y:R.y0-h-12,'font-size':24,'font-weight':700,'text-anchor':'middle'},s,(v/10000).toFixed(2)+'兆円');
+    if(n)el('text',{x:x+R.w/2,y:R.y0-h-42,'font-size':16,'text-anchor':'middle',class:'t2'},s,n);
+    if(n2)el('text',{x:x+R.w/2,y:R.y0-h-64,'font-size':16,'text-anchor':'middle',class:'t2'},s,n2);
+    el('text',{x:x+R.w/2,y:358,'font-size':20,'text-anchor':'middle','font-weight':700},s,y)});
+  el('line',{x1:R.x0-20,x2:R.x0+4*R.dx+R.w+20,y1:R.y0,y2:R.y0,stroke:'var(--base)'},s);
+  // 間の年数（等間隔に並べたが、時間は等間隔ではない）
+  [[0,'13年あく',1],[1,'10年あく',1],[2,'1年後',0],[3,'1年後',0]].forEach(([i,t,br])=>{const xc=R.x0+i*R.dx+R.w+(R.dx-R.w)/2;
+    if(br)el('path',{d:`M${xc-12},${R.y0+6} l8,-12 l8,12 l8,-12`,stroke:'var(--ink2)','stroke-width':2,fill:'none'},s);
+    el('text',{x:xc,y:390,'font-size':16,'font-weight':br?700:400,'text-anchor':'middle',class:'t2'},s,t)});
+  el('text',{x:0,y:24,'font-size':16},s,'この統計の IC には、マイコンのほか、カメラの目の一部（CCD という画像センサー）も入り、');
+  el('text',{x:0,y:46,'font-size':16},s,'パワー半導体などの個別の部品は入らない。');
+  // TSMC 熊本第1工場の量産開始の印
+  const xm=R.x0+3*R.dx+R.w+(R.dx-R.w)/2;
+  el('line',{x1:xm,x2:xm,y1:58,y2:R.y0,stroke:'var(--ink2)','stroke-width':2,'stroke-dasharray':'4 4'},s);
+  el('text',{x:xm-8,y:24,'font-size':16,'font-weight':700,'text-anchor':'end'},s,'TSMC 熊本第1工場の');
+  el('text',{x:xm-8,y:46,'font-size':16,'font-weight':700,'text-anchor':'end'},s,'量産開始（2024年12月）');
+  const x4=xm+12;
+  el('text',{x:x4,y:24,'font-size':16,class:'t2'},s,'2025年は、一部の会社が');
+  el('text',{x:x4,y:46,'font-size':16,class:'t2'},s,'報告の仕方を変えたため、');
+  el('text',{x:x4,y:68,'font-size':16,class:'t2'},s,'それまでの年と単純には');
+  el('text',{x:x4,y:90,'font-size':16,class:'t2'},s,'比べられない（破線の棒）');
+ },'九州の IC の生産額は一度大きく落ち、2024年に2000年の94%まで戻った。この図からは、熊本の分も、TSMC 熊本第1工場の分も分からない。',
+ '出典: 2000・2013・2023年と全国の割合＝九州経済産業局「九州半導体人材育成等コンソーシアムについて」2024年7月 p.2（熊本県のサイトに掲載。経済産業省「生産動態統計調査」をもとに作成）　2024年＝九州経済産業局の発表（2025-02-19、日本経済新聞）　2025年＝同（2026-02-20、日本経済新聞。一部の事業者が報告の仕方を変えたため、それまでの年と単純には比べられない）　IC の範囲＝生産動態統計の品目表（2010年）');
+
+// --- 熊本の今
+slide('二つ目の問い ― 熊本の中では','熊本の中では、何が変わっているか','この産業に特有の変化（水・土地・働く人・電力）と、商工会の会員の受け止め。時点は項目ごとに書いた',fig=>{
+  const s=svgIn(fig,1168,400);
+  // 左: 商工会の会員の受け止め
+  el('text',{x:0,y:20,'font-size':17,'font-weight':700},s,'事業者の受け止め（2026年3月末。7月28日の地震より前）');
+  el('rect',{x:0,y:32,width:540,height:96,rx:10,fill:'var(--grid)'},s);
+  el('text',{x:16,y:60,'font-size':16},s,'誰に: 県内49の商工会の会員 489事業者（小規模が中心）');
+  el('text',{x:16,y:86,'font-size':16},s,'何を: TSMC の進出は、自分の事業所の経営に');
+  el('text',{x:16,y:110,'font-size':16},s,'　　　どんな影響を与えているか');
+  const W=540; [[88,'どちらとも言えない','var(--other)'],[9,'プラスの影響がある','var(--fc)'],[3,'マイナスの影響がある','var(--kr)']].reduce((x,[v,n,c],i)=>{
+    const w=W*v/100; const r=el('rect',{x:x+1,y:144,width:w-2,height:62,rx:3,fill:c},s); hov(r,`${n}: ${v}%`);
+    if(i===0)el('text',{x:x+14,y:184,'font-size':24,'font-weight':700},s,`${n} ${v}%`);
+    else el('text',{x:x+w,y:i===1?232:258,'font-size':19,'font-weight':700,'text-anchor':'end',fill:c},s,`${n} ${v}%`);
+    return x+w},0);
+  el('text',{x:0,y:300,'font-size':17,'font-weight':700},s,'プラスの影響の中身（報告のまとめ）');
+  el('text',{x:16,y:326,'font-size':17},s,'「消費拡大」「工事の増加」に限られる');
+  el('text',{x:0,y:366,'font-size':16,class:'t2'},s,'商工会の会員に尋ねた調査で、商工会議所の会員は入らない。');
+  // 右: この産業に特有の変化
+  const x0=560; el('line',{x1:x0-14,x2:x0-14,y1:0,y2:396,stroke:'var(--grid)','stroke-width':2},s);
+  const B=[['水（第1工場が汲む地下水）',['1日 約5,000m³（2025年1月。許可は最大8,500m³）。熊本市の水道が','1日に配る約22万m³の約2%。JASM は、使う水の75%以上を工場の中で','再生することを目指すとしている']],
+           ['土地（地価の上昇率。2024年 → 2025年 → 2026年、各年7月1日）',['大津町 19.4% → 11.6% → 6.5%、菊陽町 16.9% → 11.1% → 4.8%','上がり続けているが、上げ幅は年ごとに縮んでいる']],
+           ['働く人',['JASM の従業員は約1,900人（2025年1月、派遣を含む）','JASM の大学卒の初任給は月29万円（2025年4月に見直し）']],
+           ['台湾籍の人（工場の社員と家族に限らない）',['熊本県 1,982人（2025年12月末。1年で63人、3.3%増）','熊本市 871人・菊陽町 340人・合志市 128人・大津町 94人（2023年12月末）','従業員がどの市町村に住むかを調べた、公表の調査は見当たらない']],
+           ['電力',['工場だけの使用量は公表されていない。熊本変電所の容量を 1,000MVA','増やす工事は、2027年6月に使い始める計画（目的は「需要対策」）']]];
+  let yb=0;
+  B.forEach(([hd,L],i)=>{
+    el('text',{x:x0,y:yb+17,'font-size':17,'font-weight':700},s,hd);
+    L.forEach((t,j)=>el('text',{x:x0+12,y:yb+39+j*20,'font-size':16,'font-weight':(i===3&&j===2)?700:400},s,t));
+    yb+=28+L.length*20+8});
+ },'工場のまわりでは、地価の上昇（上げ幅は縮小）、地下水の新たな利用、新しい雇用が見える。一方、商工会の会員の9割近くは、影響を「どちらとも言えない」と答えた（地震の前）。',
+ '出典: 商工会＝熊本県商工会連合会「第28回影響調査報告」（2026年3月31日、489者）　水・従業員＝JASM「工場概要説明」2025-01-27、熊本市「世界に誇る地下水都市・熊本」　地価＝熊本県「令和8年 熊本県地価調査 概要」2026-09-16　初任給＝JASM の募集要項（マイナビ2027）　台湾籍＝熊本県 共生推進本部会議 2026-06-25、「熊本県の国際交流」令和6年度版　電力＝電力広域的運営推進機関「供給計画の取りまとめ」2026年3月');
+
+// --- 地震と、その後
+slide('二つ目の問い ― 熊本の中では','2026年7月の地震 ― 半導体の工場は、予定を含め1週間ほどで動き出した','令和8年熊本地震（2026年7月28日、最大震度7）。各社が発表した生産の再開',fig=>{
+  const s=svgIn(fig,1168,400);
+  const X=d=>40+(d-28)*(680/27); // 7/28=28 … 8/24=55
+  el('line',{x1:X(28),x2:X(55),y1:290,y2:290,stroke:'var(--base)','stroke-width':2},s);
+  [[28,'7/28 地震'],[35,'8/4'],[42,'8/11'],[49,'8/18']].forEach(([d,t])=>{el('line',{x1:X(d),x2:X(d),y1:284,y2:296,stroke:'var(--base)'},s);el('text',{x:X(d),y:318,'font-size':16,'text-anchor':'middle',class:'t2'},s,t)});
+  // [名前, 再開の日, 地震前の水準の日, 説明]
+  const E=[['三菱電機（スイッチ）',30,null,'7/30 生産を再開'],['TSMC 熊本第1工場（頼まれて作る工場）',null,34,'8/3 地震前の水準に（TSMC の発表）'],['ソニー（光）',35,null,'8/4 から段階的に再開の予定（7/31 の発表）',1],['ルネサス 川尻（制御）',35,54,'8/4 再開 → 8/23 地震前の水準に']];
+  E.forEach(([n,a,b,t,pl],i)=>{const y=14+i*64,end=b||a;
+    el('text',{x:0,y:y+18,'font-size':17,'font-weight':700},s,n);
+    if(a)el('rect',{x:X(28),y:y+28,width:X(a)-X(28),height:16,rx:3,fill:'var(--other2)'},s);
+    if(a&&b)el('line',{x1:X(a),x2:X(b),y1:y+36,y2:y+36,stroke:'var(--fc)','stroke-width':3,'stroke-dasharray':'5 4'},s);
+    if(a)el('circle',{cx:X(a),cy:y+36,r:8,fill:pl?'var(--surface)':'var(--fc)',stroke:pl?'var(--fc)':null,'stroke-width':pl?2.5:null,'stroke-dasharray':pl?'3 3':null},s);
+    if(b)el('circle',{cx:X(b),cy:y+36,r:8,fill:'var(--surface)',stroke:'var(--fc)','stroke-width':3},s);
+    el('text',{x:(a&&b)?X(a)+14:X(end)+16,y:(a&&b)?y+64:y+42,'font-size':16,class:'t2'},s,t)});
+  // 凡例
+  el('circle',{cx:8,cy:348,r:7,fill:'var(--fc)'},s); el('text',{x:22,y:354,'font-size':16},s,'生産を再開');
+  el('circle',{cx:130,cy:348,r:7,fill:'var(--surface)',stroke:'var(--fc)','stroke-width':3},s); el('text',{x:144,y:354,'font-size':16},s,'地震前の水準に戻った');
+  el('line',{x1:330,x2:366,y1:348,y2:348,stroke:'var(--fc)','stroke-width':3,'stroke-dasharray':'5 4'},s); el('text',{x:374,y:354,'font-size':16},s,'再開から元の水準まで');
+  el('circle',{cx:568,cy:348,r:7,fill:'var(--surface)',stroke:'var(--fc)','stroke-width':2.5,'stroke-dasharray':'3 3'},s); el('text',{x:582,y:354,'font-size':16},s,'再開の予定（発表）');
+  el('rect',{x:0,y:370,width:30,height:14,rx:3,fill:'var(--other2)'},s); el('text',{x:38,y:383,'font-size':16},s,'地震から再開まで（第1工場は、再開の日が公表されていない）');
+  // 右: 建設・地域
+  const x0=800;
+  [['TSMC 熊本第2工場',['現場に被害はなく、一部の工事を','止めたあと、建設を続けている'],'var(--grid)'],['県内の小さな事業者',['商工会の会員の約6割が、','直接（27%）・間接（32%）の','被害を受けていた','（9月末の調査、486者）'],'var(--warn)']].forEach(([h,t,c],i)=>{const y=10+i*150;
+    el('rect',{x:x0,y,width:368,height:i?186:132,rx:10,fill:'none',stroke:c,'stroke-width':2},s);
+    el('text',{x:x0+16,y:y+34,'font-size':19,'font-weight':700,fill:i===1?'var(--warn)':null},s,h);
+    t.forEach((w,j)=>el('text',{x:x0+16,y:y+66+j*27,'font-size':17},s,w))});
+ },'半導体の工場は、予定を含め1週間ほどで生産を再開し、TSMC 熊本第2工場の建設も続いている。一方、9月末の調査では、商工会の会員の約6割が被害を受けていた。',
+ '出典: 地震の名称・震度＝気象庁の発表を伝える報道（ウェザーニュース 7/28 ほか）　三菱電機＝EE Times Japan（8/24 更新）　第1工場・第2工場＝TSMC の発表を伝える報道（8/3）、ITmedia NEWS（7/29、台湾・経済日報）　ソニー＝熊本日日新聞 7/31（予定の発表。実際の再開を伝える報道は確かめられなかった）　ルネサス＝Renesas「UPDATE 4」2026-08-04 ほか　事業者＝熊本県商工会連合会「第29回影響調査報告（確定版）」（調査時点 2026年9月30日、調査対象 486者）');
+
+// ===== 世界から見た日本 =====
+function donutG(s,cx,cy,R,r,parts,title,sub,fs=15){let a=-Math.PI/2;const tot=parts.reduce((t,p)=>t+p[1],0);let oi=0;
+  parts.forEach(([n,v,k])=>{const b=a+v/tot*2*Math.PI,L=(b-a)>Math.PI?1:0;
+    const fill=k==='jp'?'var(--jp)':(k==='rest'?'var(--surface)':(oi++%2?'var(--other2)':'var(--other)'));
+    const p=el('path',{d:`M${cx+R*Math.cos(a)},${cy+R*Math.sin(a)}A${R},${R} 0 ${L} 1 ${cx+R*Math.cos(b)},${cy+R*Math.sin(b)}L${cx+r*Math.cos(b)},${cy+r*Math.sin(b)}A${r},${r} 0 ${L} 0 ${cx+r*Math.cos(a)},${cy+r*Math.sin(a)}Z`,fill,stroke:k==='rest'?'var(--base)':'var(--surface)','stroke-width':k==='rest'?1.5:2,'stroke-dasharray':k==='rest'?'3 3':null},s);
+    hov(p,`${n}: ${v}%`);
+    const m=(a+b)/2,ca=Math.cos(m);
+    el('text',{x:cx+(R+12)*ca,y:cy+(R+12)*Math.sin(m)+5,'font-size':k==='jp'?fs+4:fs,'font-weight':k==='jp'?700:400,'text-anchor':ca>0.2?'start':(ca<-0.2?'end':'middle'),fill:k==='jp'?'var(--jp)':null,class:k==='jp'?null:'t2'},s,`${n} ${v}%`);a=b});
+  el('text',{x:cx,y:cy+5,'font-size':16,'font-weight':700,'text-anchor':'middle'},s,sub||'');
+  el('text',{x:cx,y:cy+R+46,'font-size':19,'font-weight':700,'text-anchor':'middle'},s,title)}
+
+slide('三つ目の問い ― 世界は日本の何に頼っているか（一つ目の問いの「順位」も、ここで見る）','半導体を作る仕事の95%を、米国・日本・韓国・台湾・中国・欧州が担う','「作る仕事」＝設計する・作る機械を造る・回路を焼き付ける・切り分けて包む、の4つの役目と材料。そこで生まれる価値（売上から仕入れの分を引いた額）を、国(地域)ごとに分けた（2022年）',fig=>{
+  const s=svgIn(fig,1168,400);
+  donutG(s,584,186,156,92,[['米国',38],['日本',12,'jp'],['韓国',12],['台湾',11],['中国',11],['欧州',11],['残りの国と地域すべて',5,'rest']],'','',18);
+  el('text',{x:584,y:176,'font-size':22,'font-weight':700,'text-anchor':'middle'},s,'6つの国・地域で');
+  el('text',{x:584,y:214,'font-size':34,'font-weight':700,'text-anchor':'middle'},s,'95%');
+  el('text',{x:584,y:392,'font-size':16,'text-anchor':'middle',class:'t2'},s,'※ 欧州＝EU（27の加盟国）を1つの地域として数えた');
+ },'日本は6つの国・地域の1つで、米国（38%）に次いで、韓国と並ぶ12%を担う。残りの国と地域をすべて合わせても、5%にすぎない。',
+ '出典: SIA/BCG「Emerging Resilience in the Semiconductor Supply Chain」2024年5月 Exhibit 2（2022年、全体の付加価値。全体の値は、これが公表されている最新。設計・機械・材料は本社の所在地、回路の焼き付け・包むは工場の所在地で数える）');
+
+// --- 作るのに関わる4つの役目（全体の価値の図とは別の報告）
+slide('三つ目の問い ― 世界は日本の何に頼っているか','半導体を作るのに関わる4つの役目 ― 役目ごとに、強い国が違う','全体の価値（日本 12%）の図とは別の報告（2024年）で、役目ごとに国の割合を見た。数え方が役目によって違うため、合わせても 12% にはならない。青＝日本、灰色の帯の全体＝世界（100%）',fig=>{
+  const s=svgIn(fig,1168,400);
+  const P=[['設計する','計算・制御用',[['米国',73],['台湾',8],['欧州',7],['日本',3]]],
+           ['','スイッチ・光など',[['米国',38],['日本',20],['欧州',19],['中国',14]]],
+           ['作る機械を造る','工場に納める機械',[['米国',41],['日本',24],['欧州',24]]],
+           ['回路を焼き付ける','円盤に回路を作る',[['中国',27],['台湾',18],['韓国',16],['日本',15]]],
+           ['切り分けて包む','検査して部品の形にする',[['中国',28],['台湾',20],['韓国',9],['日本',8]]]];
+  const w=216,gap=22,bw=140;
+  // 枠は4つ（設計は1つの枠の中で、回路の種類で2列に分けた）
+  [[0,2*w+gap,'設計する','回路の種類で2列に分けた'],[2,w,'作る機械を造る','工場に納める機械'],[3,w,'回路を焼き付ける','円盤に回路を作る'],[4,w,'切り分けて包む','検査して部品の形にする']].forEach(([i,ww,t,sub])=>{const x=i*(w+gap);
+    el('rect',{x,y:6,width:ww,height:80,rx:10,fill:'var(--surface)',stroke:'var(--ink2)','stroke-width':2},s);
+    el('text',{x:x+12,y:38,'font-size':20,'font-weight':700},s,t); el('text',{x:x+12,y:66,'font-size':16,class:'t2'},s,sub)});
+  P.forEach(([t,sub,list],i)=>{const x=i*(w+gap);
+    if(i<2)el('text',{x,y:104,'font-size':16,'font-weight':700},s,sub+'の回路');
+    list.forEach(([c,p],j)=>{const y=(i<2?116:108)+j*(i<2?46:50),jp=c==='日本';
+      el('text',{x,y:y+20,'font-size':17,'font-weight':jp?700:400,fill:jp?'var(--jp)':null},s,c);
+      el('rect',{x:x+48,y,width:bw,height:28,rx:4,fill:'var(--grid)'},s);
+      const r=rbar(s,x+48,y,bw*p/100,28,jp?'var(--jp)':'var(--other)'); hov(r,`${t||'設計する'}（${sub}） ${c}: ${p}%`);
+      el('text',{x:x+48+bw*p/100+6,y:y+21,'font-size':16,'font-weight':700},s,p+'%')})});
+  const mx=3*(w+gap)-gap/2; el('line',{x1:mx,x2:mx,y1:98,y2:392,stroke:'var(--ink2)','stroke-width':2,'stroke-dasharray':'6 5'},s);
+  el('text',{x:0,y:338,'font-size':16},s,'材料全体では、日本は10%（台湾30%・中国20%）。');
+  el('text',{x:0,y:360,'font-size':16},s,'ただし品目によっては、日本の会社が世界の半分ほどを作る。');
+  el('text',{x:mx/2,y:390,'font-size':16,'font-weight':700,'text-anchor':'middle'},s,'会社の売上で数える（本社のある国）');
+  el('text',{x:mx+(1168-mx)/2,y:390,'font-size':16,'font-weight':700,'text-anchor':'middle'},s,'工場の能力で数える（工場のある場所）');
+ },'4つの役目のすべてで1位の国は無い。設計は米国、機械は米国が1位（41%）で日本と欧州が24%で並び、焼き付ける工場と包む工場は中国が1位。日本は、スイッチ・光などの設計で20%を占める。',
+ '出典: SIA「商務省への意見書（Section 232）」2025年5月 Figure 5（2024年。SIA/BCG 2024年5月の報告を更新した値。上位の国と日本のみ表示）　計算・制御用＝Logic（この資料の計算と制御にほぼあたる）、スイッチ・光など＝DAO。記憶の設計（日本 6%）は省いた');
+
+// --- 日本の会社が強い品目
+slide('三つ目の問い ― 世界は日本の何に頼っているか','日本の会社が、世界の約半分かそれ以上を作っている材料と機械','回路を焼き付けるのに欠かせない材料と機械。2024年6月の報告の値（元の報告に、何年の割合かの記載は無い）',fig=>{
+  const s=svgIn(fig,1168,390);
+  const d=[['感光材を塗って現像する機械',88,'東京エレクトロンなど'],['シリコンウエハー（円盤）',53,'信越化学・SUMCO'],['感光材（フォトレジスト）',50,'JSR・東京応化など']];
+  const x0=480,W=600,bh=56,gap=46;
+  d.forEach(([n,v,co],i)=>{const y=10+i*(bh+gap);
+    el('text',{x:x0-18,y:y+24,'font-size':21,'text-anchor':'end','font-weight':700},s,n);
+    el('text',{x:x0-18,y:y+50,'font-size':17,'text-anchor':'end',class:'t2'},s,co);
+    el('rect',{x:x0,y,width:W,height:bh,rx:6,fill:'var(--grid)'},s);
+    const r=rbar(s,x0,y,W*v/100,bh,'var(--jp)',6); hov(r,`${n}: 日本 約${v}%`);
+    el('text',{x:x0+W*v/100-14,y:y+bh*0.7,'font-size':34,'font-weight':700,'text-anchor':'end',fill:'#ffffff'},s,`約${v}%`)});
+  el('text',{x:x0+W,y:322,'font-size':16,'text-anchor':'end',class:'t2'},s,'青＝日本の会社。棒の全体＝世界（100%）');
+  el('text',{x:0,y:352,'font-size':17},s,'感光材＝光を当てて、回路の形を写し取る薬。現像＝光の当たった部分を洗い流して、形を出すこと。');
+  el('text',{x:0,y:380,'font-size':16,class:'t2'},s,'同じ資料の別の箇所では、ウエハーは主要2社で約9割、感光材は日本の数社で約9割とされ、数え方で値が変わる。');
+ },'世界の工場は、これらを日本の会社に大きく頼っている。日本の価値は、日本の会社の売上全体の割合（7%）だけでは見えない場所にある。',
+ '出典: 米国商務省 国際貿易局「Japan Country Commercial Guide: Semiconductors」（Brookings Institution 2024年6月の報告を引用。2025-11-20 公開の版）');
+
+// --- 外からの見られ方（新しい画面）
+slide('三つ目の問い ― 外からの見られ方','外からは、期待と心配の両方が向けられている','海外の会社・政府・報道の発言を、5つの話題に分けた（2025年6月〜2026年11月）。訳は要旨',fig=>{
+  const s=svgIn(fig,1168,400);
+  const K={'期待':['var(--fc-soft)','var(--fc)'],'両面':['var(--grid)','var(--ink2)'],'心配':['var(--kr-soft)','var(--kr)']};
+  const R=[['期待','TSMC 会長 魏哲家（2026年2月、東京で高市首相と会って）',['熊本第2工場で 3nm を作る計画を伝え、「日本の支援がなければ、この巨大な工場の計画は成り立たない」と述べた。']],
+           ['期待','米国政府（2025年10月、日米の協力の覚書）',['最先端の半導体などで協力を深め、信頼できる供給網を一緒につくると、文書で約束した。']],
+           ['両面','中国（2026年1月、商務部と国営の英字紙 China Daily）',['日本産の半導体の材料（ジクロロシラン＝回路を作るときに使うガス）に、反ダンピングの調査を始めた。','一方、国営紙は「日本は感光材の世界市場の70%超を握る」と書いた（日経の値。米国商務省の資料の約50%とは出典が違う）。']],
+           ['心配','TSMC 会長（2025年6月）／韓国の京郷新聞（2026年11月）',['会長は「車で10〜15分の道が、いまは1時間近く」と渋滞を挙げ、第2工場の着工を遅らせると述べた。','韓国紙は、第2工場の水の使用や、巨額の補助金への、熊本の住民の不安を伝えた。']],
+           ['心配','台湾の調査会社 TrendForce（2026年11月、Bloomberg の報道を引く）',['ラピダスの 2nm が予定より数か月遅れ、顧客の候補は「失敗したら TSMC に戻るのは難しい」と慎重。','ラピダスは、2027年度後半の量産を目指すと答えた。']]];
+  let y=0;
+  R.forEach(([k,who,lines])=>{const h=26+lines.length*25+6;
+    el('rect',{x:0,y,width:70,height:h-6,rx:6,fill:K[k][0]},s);
+    el('text',{x:35,y:y+(h-6)/2+7,'font-size':19,'font-weight':700,'text-anchor':'middle',fill:K[k][1]},s,k);
+    el('text',{x:86,y:y+20,'font-size':17,'font-weight':700},s,who);
+    lines.forEach((t,j)=>el('text',{x:86,y:y+45+j*25,'font-size':17},s,t));
+    y+=h+4});
+ },'外からは、日本の工場と材料への期待が語られる。同時に、渋滞・水・補助金やラピダスの遅れが、心配として伝えられている。中国の動きは、対立と評価の両面である。',
+ '出典: Taipei Times 2026-02-06（Bloomberg）　ホワイトハウス「U.S.-Japan Technology Prosperity Deal」2025-10-28　中国商務部 報道官談話（2026年1月）　China Daily 2026-01-09　Fortune 2025-06-03（Bloomberg）　京郷新聞 英語版 2026-11-10　TrendForce 2026-11-10。欧州の報道は含めていない');
+
+// --- 結び
+slide('結び','三つの問いへの答え ― 熊本と日本は、世界の中のどこにいるのか','各画面の図から言えること',fig=>{
+  fig.parentNode.classList.add('textpage'); fig.className='body';
+  fig.innerHTML=`<div class="ans">
+   <div class="k">輸出・順位・力関係は、何が変わったのか</div><div>半導体の中心である IC の輸出額は、円で数えて5年で1.7倍になった（個数はほぼ同じ）。日本の会社の売上の割合は、1980年代の約50%に対し、2025年は7%（別々の報告の値）。日本にある工場の割合は約17%から15%（2032年の予測）へ、少し下がる見込み。最先端の工場は、2027〜28年の量産を計画している段階。全体の価値では、日本は米国に次ぎ、韓国と並ぶ12%。</div>
+   <div class="k">熊本の経済は、TSMC の工場で変わったのか</div><div>九州の IC の生産額は2024年に2000年の94%まで戻ったが、熊本の分は統計から分からない。工場のまわりでは、地価の上昇（上げ幅は縮小）、地下水の新たな利用、新しい雇用が見える。商工会の会員の9割近くは影響を「どちらとも言えない」と答え（地震の前）、地震の後は約6割が被害を受けていた。</div>
+   <div class="k">熊本の外・日本の外からは、いま どう見られているのか</div><div>世界は、半導体を作る機械の約4分の1を日本の会社に頼る。品目では、ウエハーや感光材など、日本の会社が世界の約半分かそれ以上を作るものがある。海外の会社と政府からは期待が、会社・報道・調査会社からは、渋滞・水・補助金やラピダスの遅れへの心配が出ている。中国の動きには、対立と評価の両面がある。日本の国内の他の地域からの見方は、今日は扱っていない。</div>
+   <div class="k">これから見るもの</div><div>TSMC 熊本第2工場とラピダスの量産の開始時期、第2工場の水の使い方、工場で働く人がどこに住んでいるか、商工会の調査の「プラスの影響」</div></div>`;
+ },'日本にある工場の割合は少し下がる見込みで、最先端の工場は計画の段階。輸出額は円で数えると増えた（個数はほぼ同じ）。熊本では地価・地下水・雇用の動きが見えるが、事業者の9割近くは影響を「どちらとも言えない」と答えた。世界は日本の機械と一部の材料に頼り、外からは期待と心配が向けられている。','各画面の出典による。2032年の数字は2024年時点の予測。第2工場とラピダスは2026年10月時点の計画。');
+
+const NOTES=["今日は、熊本と半導体についてお話しします。台湾のTSMCが熊本に工場を建設し、実際に生産を始めました。大きな投資が行われ、多くの人が働き、地域にもさまざまな変化が生まれています。一方、日本の半導体産業は、かつて世界をリードしていた時代とは、ずいぶん違う姿になっています。熊本に工場ができたことは、日本にとって何を意味するのでしょうか。そして、私たちの暮らしや地域の経済には、どのような影響があるのでしょうか。今日は、世界の半導体産業と熊本の動きを行き来しながら、その関係を考えてみたいと思います。", "今回のお話は、受講者の方からいただいた三つの疑問をもとにしています。一つ目は、半導体をめぐる日本の輸出や世界での位置づけが、どう変わったのか。二つ目は、TSMCの工場によって、熊本の経済が実際に変わったのか。そして三つ目は、熊本や日本の動きを、海外ではどのように見ているのか、ということです。TSMCは台湾の企業で、ほかの会社から注文を受けて半導体を製造する、世界最大の企業です。熊本では、子会社のJASMが工場を運営しています。第一工場は、2024年12月に量産を始めました。この三つの疑問に答えるために、まず半導体とはどのようなものなのか、少しだけ整理しておきましょう。", "半導体という言葉はよく耳にしますが、具体的に何をしているのかは、案外分かりにくいものです。身近な例として、ノートパソコンを考えてみましょう。私たちが画面に文字を入力したり、写真を保存したり、動画を見たりできるのは、中にあるさまざまな半導体が働いているからです。半導体には、計算するもの、情報を記憶するもの、機械の動きを制御するものがあります。電気の流れを調整するものや、光を扱うもの、温度や動きを感じ取るものもあります。つまり、半導体は一種類の製品ではありません。それぞれ違う仕事をする、多くの部品の集まりです。この違いを知っておくと、なぜAIの発展で急に売れる半導体があるのか、また、熊本で作られている半導体が世界のどこに関わっているのかが、見えてきます。", "世界の半導体の売上を種類別に見ると、大きな特徴があります。2025年には、計算と記憶に使う半導体だけで、全体のおよそ3分の2を占めました。その一方で、熊本には、これとは違う種類の半導体を作る工場もあります。たとえばルネサスは制御、ソニーはカメラなどに使う光の半導体、三菱電機は大きな電力を切り替える半導体に関わっています。そしてTSMCの工場は、注文した企業の設計に応じて製品を作ります。ここで覚えておきたいのは、半導体の世界では、何を作っているかによって、市場の大きさも、競争相手も、求められる技術も違うということです。単に半導体産業が好調だと言っても、すべての企業や工場が同じように伸びるわけではありません。", "その違いが、特にはっきり現れているのが、AIの普及です。2025年には、計算用と記憶用の半導体の売上が、ともに大きく伸びました。AIは、大量の計算を行うだけでなく、膨大な情報を一時的に保存し、何度も読み書きします。そのため、計算する半導体と、記憶する半導体の両方が必要になります。世界半導体市場統計、WSTSは、AI向けデータセンターへの投資が、この成長を支えていると説明しています。特に記憶用の半導体は、2026年にも大きく伸びると予測されています。ところが、熊本で従来から作られてきた制御用や光の半導体などは、同じ勢いで伸びているわけではありません。AIによって半導体市場が急成長していても、その恩恵がどこに集まるかは、製品の種類によって大きく異なるのです。", "ここから、日本の半導体産業がどう変わってきたのかを見ていきます。まず輸出です。日本から海外に輸出された集積回路、いわゆるICの金額は、2020年から2025年までの5年間で、およそ1.7倍になりました。九州・山口・沖縄では、さらに大きく増えています。これだけを見ると、日本の半導体産業が急速に成長しているように思えます。ただし、気をつけたいことがあります。輸出額は円で計算されています。円安になれば、同じ製品でも円に換算した金額が大きくなることがあります。実際、この期間に輸出されたICの個数は、ほぼ変わっていません。また、税関の数字だけでは、どの工場で作られた製品なのかは分かりません。ですから、輸出額が増えたことは確かですが、それだけで日本の生産量が大幅に増えたとか、熊本の工場の成果だと判断することはできないのです。", "では、日本は世界の中で、どのような位置にいるのでしょうか。1980年代の最盛期、日本の半導体企業は、世界の売上のおよそ半分を占めていました。ところが2025年の割合は、約7パーセントです。二つの数字は異なる資料によるもので、厳密に同じ条件で比較できるわけではありません。それでも、日本企業の存在感がかつてより小さくなっていることは読み取れます。一方、日本国内の半導体工場で作れる量は、今後も増えると予測されています。ここには、大切な違いがあります。日本の会社が世界でどれだけ売っているかという話と、日本国内でどれだけ半導体を作れるかという話は、同じではありません。しかも、日本国内の生産能力が増えても、世界全体がそれ以上に増えれば、日本の割合は下がります。実際、資料に示した2032年までの予測では、日本の世界に占める割合は、約17パーセントから15パーセントへ下がる見込みです。国内の工場が増えることと、世界市場での割合が高くなることは、必ずしも一致しないのです。", "生産能力の大きさだけでなく、どの世代の半導体を作れるかも重要です。特に、高度な計算を行う半導体では、回路を細かく作る技術が求められています。こうした最先端の製造では、長い間、台湾や韓国などが先行してきました。2022年の時点で、日本には、資料で定義した最先端世代の半導体を量産する工場がありませんでした。熊本のTSMC第一工場も、最先端世代の工場ではありません。しかし、北海道のラピダスや、熊本のTSMC第二工場では、より新しい世代の半導体を量産する計画が進められています。これらが計画どおりに実現すれば、日本国内で作れる半導体の種類も変わってきます。ただし、工場を建設することと、予定した技術で安定して大量生産できることは別です。現時点で確認できる実績と、これから実現を目指す計画は、分けて考える必要があります。", "では、熊本を含む九州に目を向けてみましょう。九州は、以前から半導体産業が盛んな地域です。2000年には、九州のIC生産額は、およそ1兆4千億円に達していました。しかし、その後は大きく落ち込み、2013年にはピーク時の半分以下になっています。そこから少しずつ回復し、2024年には、2000年の水準の94パーセントにまで戻りました。つまり、九州の半導体産業は、TSMCの進出によって突然始まったわけではありません。長い歴史の中で成長し、一度大きく衰退し、再び回復してきた産業です。TSMCの進出は、その回復の過程で起きた大きな出来事と捉えられます。ただし、この統計は九州全体のものです。回復のうち、熊本やTSMCの工場がどれだけ貢献したかまでは分かりません。", "ここで、受講者の方からいただいた二つ目の疑問に戻ります。TSMCの工場ができて、熊本の経済は変わったのでしょうか。工場の周辺では、確かに変化が見られます。土地の価格が上がり、新たな雇用が生まれ、工事も増えています。一方で、工場は大量の水や電力を必要とします。地域に新しい仕事や収入が生まれることと、地域が新たな負担を引き受けることは、同時に起こり得ます。では、地元の事業者は、この変化をどう受け止めているのでしょうか。2026年3月に行われた商工会の調査では、約9パーセントがプラスの影響を感じている一方、88パーセントは「どちらとも言えない」と回答しました。もちろん、これは調査対象となった商工会の会員の回答であり、熊本のすべての事業者を代表するものではありません。それでも、工場周辺で目立つ変化がある一方、その恩恵が地域の事業者全体に広がっているとは、まだ言い切れないことが分かります。大規模な工場ができることと、その地域で暮らす多くの人の経済が良くなること。その間には、まだ考えるべき問題があるのです。", "もう一つ、熊本の半導体産業を考えるうえで欠かせない出来事があります。2026年7月28日に発生した、最大震度7の熊本地震です。半導体工場では、わずかな振動や停電でも、生産設備や製造中の製品に影響が出ることがあります。今回の地震でも、複数の工場で生産が停止しました。その後、三菱電機やTSMCなどは比較的早く生産を再開し、ルネサスも段階的に復旧しました。ただし、生産を再開した日と、地震前の水準まで戻った日は、必ずしも同じではありません。一方、9月末の商工会の調査では、会員の約6割が地震による直接、または間接の被害を受けたと回答しています。ここには、工場の復旧と、地域全体の復旧が同じではないという問題があります。そして、もう一つ考えたいことがあります。熊本の工場で作られる半導体は、日本国内だけで使われるわけではありません。産業が世界規模でつながっているということは、一つの地域の災害が、遠く離れた国の生産にも影響する可能性があるということです。熊本の地震は、地域の災害であると同時に、世界の供給網を考える出来事でもあるのです。", "ここから、三つ目の疑問を考えます。海外は、日本の半導体産業をどのように見ているのでしょうか。その前に、世界の半導体産業が、どのように成り立っているのかを見ておきます。半導体は、一つの国や一つの会社だけで完成するものではありません。回路を設計する会社があり、それを作るための機械や材料を供給する会社があり、実際に製造する工場があります。さらに、完成した回路を切り分けて製品に仕上げる工程もあります。こうした仕事を通じて生まれる価値の大部分は、アメリカ、日本、韓国、台湾、中国、ヨーロッパに集中しています。この分担の中で、日本は、世界全体の価値の約12パーセントを担っています。ここで面白いのは、先ほど見た日本企業の売上割合、7パーセントとは違う数字が出てくることです。これは、調べている対象が違うからです。世界の半導体産業で日本がどれほど重要なのかを考えるには、完成した半導体の売上だけではなく、製造に関わるさまざまな仕事を見る必要があります。", "画面の図では、半導体を作るための仕事を、役割ごとに分けています。ここで注目したいのは、どの仕事でも同じ国が一番というわけではないことです。たとえば、設計の分野ではアメリカが強い立場にあります。特に、計算や制御に使う半導体の設計では、日本の割合は小さくなっています。しかし、光を扱う半導体や電力を切り替える半導体などでは、日本の割合はもっと大きくなります。半導体を作る機械でも、日本は、アメリカに次いで、ヨーロッパと並ぶ重要な供給者です。一方、実際に半導体を製造する工程や、製品に仕上げる工程では、中国が大きな割合を占めています。つまり、ある国が半導体に強いと言うとき、何に強いのかを確かめなければなりません。設計に強い国と、製造に強い国。機械に強い国と、材料に強い国。それぞれの強みを組み合わせることで、世界の半導体産業は成り立っています。", "その分担の中で、日本が特に強いものがあります。半導体を作るための材料と、一部の製造装置です。たとえば、シリコンウエハーです。これは、半導体の回路を作る土台になる薄い円盤です。また、回路の模様を転写するときに使う感光材や、その感光材を塗って現像する装置でも、日本企業は大きな割合を占めています。画面に示した数字を見ると、世界の半分程度、あるいはそれ以上を、日本企業が供給している分野があります。このことは、少し意外かもしれません。日本の半導体企業が完成品の売上で占める割合は、かつてより大きく下がっています。しかし、世界の半導体工場の中には、日本の材料や装置がなければ、生産を続けることが難しいところもあります。もちろん、現在の供給割合が高いことと、ほかの国では決して作れないことは、同じではありません。それでも、日本の半導体産業の強さは、完成品の売上だけでは測れないことが分かります。世界で一番多く売っていることと、世界から必要とされていることは、必ずしも同じではないのです。", "こうした産業の関係を踏まえると、海外から日本に向けられる視線も、一つではないことが分かります。台湾のTSMCにとって、日本は工場を建設する場所であると同時に、政府の支援や産業基盤を得られる重要な協力相手です。アメリカも、先端半導体をめぐる協力相手として、日本を位置づけています。中国からは、日本の材料産業の強さを認める見方がある一方、日本製の材料を対象とした貿易上の調査も行われています。また、熊本の交通渋滞や水の問題、巨額の補助金について、海外の企業や報道が懸念を示した例もあります。ここから分かるのは、世界が日本に期待しているからといって、すべてが好意的に受け止められているわけではないということです。協力したいという期待もあれば、競争相手としての警戒もあります。投資の利益を期待する一方で、費用や環境への影響を心配する立場もあります。世界の半導体産業は、互いに助け合う関係でありながら、同時に競争し、利害が衝突する関係でもあるのです。", "最後に、最初の三つの疑問に戻りましょう。日本の半導体産業は、輸出額が増えている一方で、世界の中での割合や、最先端の製造能力には課題が残っています。熊本では、大きな工場が動き、雇用や土地の価格などに変化が生まれています。しかし、その効果が地域の経済全体にどこまで広がるかは、これからも確かめる必要があります。そして海外から見ると、日本は完成した半導体を大量に売る国というだけではありません。材料や製造装置を通じて、世界の半導体産業を支える国でもあります。今日、いろいろな数字をご覧いただきました。ただ、一つの数字だけでは、その国や地域の姿を十分に理解できないことも、お分かりいただけたのではないでしょうか。売上が増えても、世界での割合は下がることがあります。大きな工場ができても、その利益が地域の隅々まで届くとは限りません。完成品の売上で目立たなくても、世界の産業を支えている分野があります。熊本で起きていることを考えるときも、目の前の工場だけではなく、地域の暮らしや、世界とのつながりまで目を向けることで、違った姿が見えてきます。今日のお話が、これから半導体や熊本のニュースに接するとき、一つの数字だけで判断せず、その背景や関係を考えるきっかけになればと思います。ご清聴ありがとうございました。"];
+// ===== 描画とページ送り =====
+const stage=document.getElementById('stage');
+slides.forEach((d,i)=>{const sl=document.createElement('section');sl.className='slide'+(d.cls?' '+d.cls:'');
+  sl.innerHTML=`<div class="no">${d.no}</div><h1>${d.title}</h1><p class="lead">${d.lead}</p>`+(d.draw?'<div class="fig"></div>':'')+`<div class="msg">${d.msg}</div><div class="src">${d.src}</div>`;
+  stage.appendChild(sl); if(d.draw)d.draw(sl.querySelector('.fig'))});
+let cur=0;const all=[...document.querySelectorAll('.slide')];
+function fit(){const k=Math.min(innerWidth/1280,innerHeight/720)*0.98;all.forEach(s=>s.style.transform=`scale(${k})`)}
+function show(n){cur=Math.max(0,Math.min(all.length-1,n));all.forEach((s,i)=>s.classList.toggle('on',i===cur));document.getElementById('pg').textContent=`${cur+1} / ${all.length}`;tip.style.display='none';try{history.replaceState(null,'','#'+(cur+1))}catch(e){};if(typeof upNotes==='function')upNotes()}
+const notes=document.getElementById('notes');
+function upNotes(){notes.textContent=(NOTES[cur]||'')}
+addEventListener('keydown',e=>{const k=e.key;
+  if(['ArrowRight','ArrowDown','PageDown',' ','Enter'].includes(k)){e.preventDefault();show(cur+1)}
+  else if(['ArrowLeft','ArrowUp','PageUp','Backspace'].includes(k)){e.preventDefault();show(cur-1)}
+  else if(k==='Home')show(0); else if(k==='End')show(all.length-1);
+  else if(k==='n'||k==='N')notes.classList.toggle('on');
+  else if(k==='f'||k==='F'){if(document.fullscreenElement)document.exitFullscreen();else document.documentElement.requestFullscreen&&document.documentElement.requestFullscreen()}});
+addEventListener('click',e=>{if(notes.contains(e.target))return;if(e.clientX<innerWidth*0.3)show(cur-1);else show(cur+1)});
+const nav=document.getElementById('nav');let navT;function navShow(){nav.style.opacity=1;clearTimeout(navT);navT=setTimeout(()=>nav.style.opacity=0,4000)}addEventListener('mousemove',navShow);navShow();
+
+// ===== 音声つき再生（読み上げ原稿 v2.1・声 Gemini Despina）=====
+const VA=document.getElementById('vaud'),VB=document.getElementById('vbar'),VS=document.getElementById('vstart');
+const VD=[47.23, 52.03, 55.57, 52.3, 62.63, 65.07, 77.92, 64.04, 66.27, 81.23, 91.13, 73.94, 65.85, 76.97, 79.55, 98.13];let vOn=false,vPaused=false,vT=null;
+function vSrc(i){return 'audio/s'+String(i+1).padStart(2,'0')+'.mp3'}
+function vLabel(){document.getElementById('vt').textContent=(cur+1)+' / '+all.length;document.getElementById('vpp').textContent=vPaused?'再開':'一時停止'}
+function vPlay(){clearTimeout(vT);if(!vOn)return;VA.src=vSrc(cur);vPaused=false;VA.play().catch(()=>{vPaused=true;vLabel()});vLabel()}
+VA.addEventListener('ended',()=>{if(!vOn)return;if(cur<all.length-1){vT=setTimeout(()=>{show(cur+1)},1500)}else{vPaused=true;vLabel()}});
+function vToggle(){if(!vOn)return;if(VA.paused){clearTimeout(vT);if(VA.ended){if(cur<all.length-1)show(cur+1);else{VA.currentTime=0;VA.play();vPaused=false}}else{VA.play();vPaused=false}}else{VA.pause();clearTimeout(vT);vPaused=true}vLabel()}
+function vStop(){vOn=false;clearTimeout(vT);VA.pause();VB.classList.remove('on')}
+const _show=show;show=function(n){_show(n);if(vOn)vPlay()};
+document.getElementById('vplay').onclick=e=>{e.stopPropagation();VS.remove();vOn=true;VB.classList.add('on');vPlay()};
+document.getElementById('vsilent').onclick=e=>{e.stopPropagation();VS.remove()};
+document.getElementById('vpp').onclick=e=>{e.stopPropagation();vToggle()};
+document.getElementById('vprev').onclick=e=>{e.stopPropagation();show(cur-1)};
+document.getElementById('vnext').onclick=e=>{e.stopPropagation();show(cur+1)};
+document.getElementById('voff').onclick=e=>{e.stopPropagation();vStop()};
+VB.addEventListener('click',e=>e.stopPropagation());VS.addEventListener('click',e=>e.stopPropagation());
+addEventListener('keydown',e=>{if(document.getElementById('vstart')){e.stopImmediatePropagation();return}
+  if(!vOn)return;
+  if(e.key===' '){e.preventDefault();e.stopImmediatePropagation();vToggle()}
+  else if(e.key==='m'||e.key==='M'){vStop()}},true);
+addEventListener('resize',fit);fit();show((parseInt(location.hash.slice(1))||1)-1);
+</script>
+</body>
+</html>
